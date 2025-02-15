@@ -11,6 +11,8 @@ const states = {
   idle: "idle",
 };
 
+let _currentState = states.idle;
+
 export function init() {
   Waves.attach(".circle-btn", ["waves-circle", "waves-float", "waves-light"]);
   Waves.attach(".rounded-btn", ["waves-float", "waves-light"]);
@@ -65,8 +67,16 @@ export function setupEventListeners() {
   rejectCallButton.addEventListener("click", rejectCall);
   endCallButton.addEventListener("click", webRtc.endRemoteCall);
   window.addEventListener("beforeunload", () => {
-    webRtc.endRemoteCall();
-    webRtc.endLocalCall();
+    if (_currentState === states.inCall) {
+      webRtc.endRemoteCall();
+      webRtc.endLocalCall();
+    } else if (_currentState === states.calling) {
+      if (webRtc.isIncomingCall()) {
+        webRtc.rejectCall();
+      } else {
+        webRtc.cancelCall();
+      }
+    }
   });
 }
 
@@ -190,6 +200,7 @@ export function receiveIncomingCall(offer, remoteUserId) {
 }
 
 function refreshControlsState(state) {
+  _currentState = state;
   switch (state) {
     case states.calling:
       startCallButton.disabled = true;

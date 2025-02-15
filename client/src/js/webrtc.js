@@ -244,3 +244,7 @@ export function handleRejectedCall() {
   stopLocalStream();
   ui.hideOutgoingCallModal();
 }
+
+export function isIncomingCall() {
+  return _incomingOffer !== null;
+}

@@ -39,7 +39,7 @@
 }
 
 .circle-btn {
-  @apply flex h-10 w-10 cursor-pointer items-center justify-center disabled:cursor-not-allowed disabled:opacity-50;
+  @apply flex h-10 min-h-10 w-10 min-w-10 cursor-pointer items-center justify-center disabled:cursor-not-allowed disabled:opacity-50;
 }
 
 #video-container {
