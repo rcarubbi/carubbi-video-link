@@ -1,9 +1,10 @@
-import uuidv4 from "uuid/v4";
+import { v4 as uuidv4 } from "uuid";
 
-export function register(socket, users) {
-  socket.on("user-joining", () => {
+export function addHandler(socket, users) {
+  socket.on("register-user", () => {
     const userId = uuidv4();
     users.set(userId, socket.id);
-    socket.emit("user-joined", { userId: userId });
+    socket.emit("user-registered", { userId });
+    console.log("User registered", { userId, socketId: socket.id });
   });
 }

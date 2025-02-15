@@ -8,90 +8,29 @@ let _videoDevices = [];
 let _peerConnection = null;
 let _localStream = null;
 let _remoteUserId = null;
+let _incomingOffer = null;
+
+const videoConstraints = {
+  // width: { ideal: 1920, max: 1920 },
+  // height: { ideal: 1080, max: 1080 },
+  // frameRate: { ideal: 30 },
+};
+
+const audioConstraints = {
+  echoCancellation: true,
+  noiseSuppression: true,
+  autoGainControl: true,
+};
 
 const iceServers = [
   {
     urls: "stun:stun.l.google.com:19302",
   },
-  {
-    urls: "stun:stun1.l.google.com:19302",
-  },
-  {
-    urls: "stun:stun2.l.google.com:19302",
-  },
-  {
-    urls: "stun:stun3.l.google.com:19302",
-  },
-  {
-    urls: "stun:stun4.l.google.com:19302",
-  },
-  {
-    urls: "stun:stun.services.mozilla.com",
-  },
-  {
-    urls: "stun:stun.stunprotocol.org:3478",
-  },
-  {
-    urls: "stun:stun.voipbuster.com",
-  },
-  {
-    urls: "stun:stun.voxgratia.org",
-  },
-  {
-    urls: "stun:stun.xten.com",
-  },
-  {
-    urls: "stun:stun.schlund.de",
-  },
-  {
-    urls: "stun:stun.iptel.org",
-  },
-  {
-    urls: "stun:stun.ekiga.net",
-  },
-  {
-    urls: "stun:stun.ideasip.com",
-  },
-  {
-    urls: "stun:stun.sipgate.net",
-  },
-  {
-    urls: "stun:stun.voipstunt.com",
-  },
-  {
-    urls: "stun:stun.1und1.de",
-  },
-  {
-    urls: "stun:stun.gmx.net",
-  },
-  {
-    urls: "stun:stun.callwithus.com",
-  },
-  {
-    urls: "stun:stun.counterpath.com",
-  },
-  {
-    urls: "stun:stun.internetcalls.com",
-  },
-  {
-    urls: "stun:stun.noc.ams-ix.net",
-  },
-  {
-    urls: "stun:stun.voiparound.com",
-  },
-  {
-    urls: "stun:stun.voip.co.uk",
-  },
-  {
-    urls: "stun:stun.voipdiscount.com",
-  },
-  {
-    urls: "stun:stun.voipfone.co.uk",
-  },
 ];
 
 export function init() {
   signalingClient.connect();
+  signalingClient.registerUser();
   listVideoDevices().then((devices) => {
     _videoDevices = devices;
     ui.populateVideoDevices(devices);
@@ -157,8 +96,8 @@ export async function startCall({ localUserId, remoteUserId }) {
   };
 
   _localStream = await navigator.mediaDevices.getUserMedia({
-    video: { deviceId: _videoDeviceId },
-    audio: { deviceId: _audioDeviceId },
+    video: { deviceId: _videoDeviceId, ...videoConstraints },
+    audio: { deviceId: _audioDeviceId, ...audioConstraints },
   });
 
   _localStream.getTracks().forEach((track) => {
@@ -170,9 +109,9 @@ export async function startCall({ localUserId, remoteUserId }) {
   const offer = await _peerConnection.createOffer();
   await _peerConnection.setLocalDescription(offer);
 
-  signalingClient.sendCallRequest({
-    localUserId,
-    _remoteUserId,
+  signalingClient.sendOffer({
+    to: _remoteUserId,
+    from: localUserId,
     offer,
   });
 }
@@ -186,7 +125,9 @@ export function cancelCall() {
 
   ui.showLocalVideoStream(null);
 
-  signalingClient.sendCancelRequest({ remoteUserId: _remoteUserId });
+  signalingClient.sendCancelCall({
+    remoteUserId: _remoteUserId,
+  });
 }
 
 export function isVideoEnabled() {
@@ -205,4 +146,101 @@ export function isAudioEnabled() {
 export function toggleAudio() {
   _localStream.getAudioTracks()[0].enabled =
     !_localStream.getAudioTracks()[0].enabled;
+}
+
+export async function setIncomingOffer(offer, remoteUserId) {
+  _remoteUserId = remoteUserId;
+  _incomingOffer = offer;
+
+  _localStream = await navigator.mediaDevices.getUserMedia({
+    video: { deviceId: _videoDeviceId },
+    audio: { deviceId: _audioDeviceId },
+  });
+
+  ui.showLocalVideoStream(_localStream);
+}
+
+export async function acceptCall() {
+  _peerConnection = new RTCPeerConnection({ iceServers });
+  _peerConnection.onicecandidate = (event) => {
+    if (event.candidate) {
+      signalingClient.sendIceCandidate({
+        candidate: event.candidate,
+        remoteUserId: _remoteUserId,
+      });
+    }
+  };
+
+  _peerConnection.ontrack = (event) => {
+    ui.showRemoteVideoStream(event.streams[0]);
+  };
+
+  _peerConnection.setRemoteDescription(_incomingOffer);
+
+  _localStream.getTracks().forEach((track) => {
+    _peerConnection.addTrack(track, _localStream);
+  });
+
+  const answer = await _peerConnection.createAnswer();
+
+  _peerConnection.setLocalDescription(answer);
+
+  signalingClient.sendAnswer({
+    remoteUserId: _remoteUserId,
+    answer,
+  });
+
+  ui.updateRemoteUserId(_remoteUserId);
+
+  _incomingOffer = null;
+}
+
+export function rejectCall() {
+  _incomingOffer = null;
+  signalingClient.sendRejectCall({ remoteUserId: _remoteUserId });
+  _remoteUserId = null;
+}
+
+export function endRemoteCall() {
+  stopLocalStream();
+  signalingClient.sendEndCall({ remoteUserId: _remoteUserId });
+}
+
+function stopLocalStream() {
+  _localStream.getTracks().forEach((track) => {
+    track.stop();
+  });
+
+  _localStream = null;
+
+  ui.showLocalVideoStream(null);
+
+  _peerConnection.close();
+  _peerConnection = null;
+
+  ui.showRemoteVideoStream(null);
+}
+
+export function endLocalCall() {
+  stopLocalStream();
+}
+
+export async function setAnswer(answer) {
+  const remoteDesc = new RTCSessionDescription(answer);
+  await _peerConnection.setRemoteDescription(remoteDesc);
+}
+
+export function addIceCandidate(candidate) {
+  _peerConnection.addIceCandidate(candidate);
+}
+
+export function cancelIncomingCall() {
+  _incomingOffer = null;
+  _remoteUserId = null;
+  ui.hideIncomingCallModal();
+}
+
+export function handleRejectedCall() {
+  stopLocalStream();
+  ui.hideOutgoingCallModal();
 }

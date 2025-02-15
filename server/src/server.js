@@ -1,7 +1,8 @@
-import app from "./app";
-import http from "http";
 import { Server } from "socket.io";
-import signalingController from "./controllers/signalingController";
+import http from "http";
+
+import app from "./app.js";
+import signalingController from "./controllers/signalingController.js";
 
 const server = http.createServer(app);
 

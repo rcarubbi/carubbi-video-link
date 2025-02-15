@@ -1,4 +1,4 @@
-export function register(socket, users) {
+export function addHandler(socket, users) {
   socket.on("disconnect", () => {
     for (const [userId, socketId] of users) {
       if (socketId === socket.id) {

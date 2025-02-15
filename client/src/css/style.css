@@ -81,3 +81,15 @@
 #outgoing-call-modal {
   @apply flex items-center justify-between gap-4 px-4 leading-none;
 }
+
+#incoming-call-modal {
+  @apply flex items-center justify-between gap-4 px-4 leading-none;
+}
+
+#accept-call-btn {
+  @apply bg-green-900;
+}
+
+#reject-call-btn {
+  @apply bg-red-900;
+}

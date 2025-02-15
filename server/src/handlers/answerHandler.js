@@ -1,8 +1,10 @@
-export function register(socket, users) {
+export function addHandler(socket, users) {
   socket.on("answer", (data) => {
-    const recipientSocketId = users.get(data.recipientUserId);
-    if (recipientSocketId) {
-      socket.to(recipientSocketId).emit("answer", data);
+    console.log("Answer received", { data });
+    const remoteUserSocketId = users.get(data.remoteUserId);
+    if (remoteUserSocketId) {
+      socket.to(remoteUserSocketId).emit("answer", data);
+      console.log("Answer sent to recipient", { remoteUserSocketId, data });
     }
   });
 }
