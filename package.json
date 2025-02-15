@@ -1,0 +1,8 @@
+{
+  "name": "carubbi-video-link",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "private": true
+}

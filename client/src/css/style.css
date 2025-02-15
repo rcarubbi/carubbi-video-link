@@ -1,0 +1,83 @@
+@import url("https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined");
+@import "tailwindcss";
+@import "node-waves/dist/waves.css";
+
+@layer base {
+  body {
+    @apply h-screen w-full flex-col text-slate-50 dark:bg-slate-950;
+  }
+
+  input[type="text"] {
+    @apply rounded-md border border-slate-200 bg-transparent px-3 py-2 text-sm text-slate-700 shadow-sm transition duration-300 placeholder:text-slate-400 hover:border-slate-300 focus:border-slate-400 focus:shadow focus:outline-none;
+  }
+}
+
+@layer components {
+  #settings-panel {
+    @apply fixed inset-0 z-50 flex items-center justify-center gap-10 bg-slate-950/70 transition-all duration-300 ease-out;
+  }
+
+  .modal {
+    @apply z-100 absolute left-1/2 top-1/3 -translate-x-1/2 -translate-y-1/3 transform rounded-lg border-2 border-slate-500 bg-slate-800 p-4 px-10 shadow-lg shadow-slate-700 transition-all duration-300 ease-out;
+  }
+
+  .menu-item {
+    @apply block w-80 cursor-pointer truncate rounded-md p-3 text-sm text-slate-800 transition-all hover:bg-slate-300 focus:bg-slate-300 active:bg-slate-300;
+  }
+
+  .dropdown-button {
+    @apply w-80 truncate;
+  }
+
+  .rounded-btn {
+    @apply flex cursor-pointer items-center justify-center rounded-md bg-slate-800 p-3 text-slate-50 hover:bg-slate-700 focus:bg-slate-700 active:bg-slate-700 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+
+  .dropdown-menu {
+    @apply absolute mt-2 rounded-md bg-white shadow-lg;
+  }
+}
+
+.circle-btn {
+  @apply flex h-10 w-10 cursor-pointer items-center justify-center disabled:cursor-not-allowed disabled:opacity-50;
+}
+
+#video-container {
+  @apply grow-1 relative flex w-full overflow-hidden bg-slate-900 p-6;
+}
+
+#remote-video {
+  @apply aspect-video w-full rounded-lg bg-slate-950 object-cover;
+}
+
+#local-video {
+  @apply absolute bottom-1 right-1 mb-8 mr-10 aspect-video w-80 max-w-80 rounded-lg bg-slate-800 object-cover;
+}
+
+#in-call-controls {
+  @apply absolute inset-x-0 bottom-10 z-10 flex gap-2 place-self-center rounded-lg bg-slate-700/20 p-3;
+}
+
+#end-call-btn {
+  @apply bg-red-900;
+}
+
+#controls {
+  @apply mb-1 flex h-20 w-full items-center gap-3 px-3;
+}
+
+#start-call-btn {
+  @apply bg-green-900;
+}
+
+#close-settings-btn {
+  @apply absolute right-2 top-2;
+}
+
+#cancel-call-btn {
+  @apply bg-red-900;
+}
+
+#outgoing-call-modal {
+  @apply flex items-center justify-between gap-4 px-4 leading-none;
+}

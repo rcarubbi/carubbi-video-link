@@ -1,0 +1,25 @@
+{
+  "hash": "dee58a19",
+  "configHash": "9e506edf",
+  "lockfileHash": "9b8dfd5d",
+  "browserHash": "e8d925e2",
+  "optimized": {
+    "@floating-ui/dom": {
+      "src": "../../node_modules/.pnpm/@floating-ui+dom@1.6.13/node_modules/@floating-ui/dom/dist/floating-ui.dom.mjs",
+      "file": "@floating-ui_dom.js",
+      "fileHash": "8d651c38",
+      "needsInterop": false
+    },
+    "node-waves": {
+      "src": "../../node_modules/.pnpm/node-waves@0.7.6/node_modules/node-waves/src/js/waves.js",
+      "file": "node-waves.js",
+      "fileHash": "88115d3c",
+      "needsInterop": true
+    }
+  },
+  "chunks": {
+    "chunk-BUSYA2B4": {
+      "file": "chunk-BUSYA2B4.js"
+    }
+  }
+}

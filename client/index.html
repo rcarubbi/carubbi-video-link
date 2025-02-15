@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Vite App</title>
+  </head>
+  <body class="flex">
+    <div id="video-container">
+      <video id="remote-video" autoplay></video>
+      <video id="local-video" autoplay></video>
+      <div id="in-call-controls">
+        <button
+          disabled
+          id="toggle-audio-btn"
+          class="circle-btn material-symbols-outlined"
+        >
+          mic
+        </button>
+        <button
+          disabled
+          id="toggle-video-btn"
+          class="circle-btn material-symbols-outlined"
+        >
+          videocam
+        </button>
+        <button
+          disabled
+          id="end-call-btn"
+          class="circle-btn material-symbols-outlined"
+        >
+          call_end
+        </button>
+      </div>
+    </div>
+    <div id="controls">
+      <label for="local-user-id">Your User ID</label>
+      <input id="local-user-id" type="text" readonly />
+      <input id="remote-user-id" type="text" placeholder="Remote User ID" />
+      <button id="start-call-btn" class="circle-btn material-symbols-outlined">
+        call
+      </button>
+      <button id="settings-btn" class="circle-btn material-symbols-outlined">
+        settings
+      </button>
+      <div id="settings-panel" class="hidden scale-90 opacity-0">
+        <div class="grid grid-cols-2 gap-x-4">
+          <label for="audio-input">Audio Input</label>
+          <label for="video-input">Video Input</label>
+          <div class="dropdown relative">
+            <button class="dropdown-button rounded-btn"></button>
+            <div class="dropdown-menu" id="audio-menu"></div>
+          </div>
+
+          <div class="dropdown relative">
+            <button class="dropdown-button rounded-btn"></button>
+            <div class="dropdown-menu" id="video-menu"></div>
+          </div>
+        </div>
+
+        <button
+          id="close-settings-btn"
+          class="circle-btn material-symbols-outlined"
+        >
+          close
+        </button>
+      </div>
+    </div>
+
+    <!-- modals -->
+    <div id="incoming-call-modal" class="modal hidden scale-90 opacity-0">
+      <p id="incoming-call-message"></p>
+      <button id="accept-call" class="rounded-btn">Accept</button>
+      <button id="reject-call" class="rounded-btn">Reject</button>
+    </div>
+
+    <div id="outgoing-call-modal" class="modal hidden scale-90 opacity-0">
+      <div id="outgoing-call-message"></div>
+      <button id="cancel-call-btn" class="circle-btn material-symbols-outlined">
+        cancel
+      </button>
+    </div>
+
+    <script type="module" src="/src/js/main.js"></script>
+  </body>
+</html>
