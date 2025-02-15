@@ -5,23 +5,13 @@ services:
       context: ./server
     ports:
       - "3000:3000"
-  ngrok:
-    image: ngrok/ngrok:latest
-    command: start --config /etc/ngrok/ngrok.yml --all
-    volumes:
-      - ./ngrok.yml:/etc/ngrok/ngrok.yml:ro
-    ports:
-      - 4040:4040
-    depends_on:
-      - signaling-server
+
   frontend:
     build:
       context: ./client
-      args:
-        - SIGNALING_SERVER_URL=${SIGNALING_SERVER_URL}
+    env_file:
+      - client/.env
     ports:
       - "80:80"
     depends_on:
       - signaling-server
-      - ngrok
-  
