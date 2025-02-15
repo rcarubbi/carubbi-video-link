@@ -5,7 +5,7 @@ export function addHandler(socket, users) {
       const remoteUserSocketId = users.get(data.remoteUserId);
       if (remoteUserSocketId) {
         socket.to(remoteUserSocketId).emit("end-call", data);
-        console.log("End call sent to recipient", { remoteUserSocketId, data });
+        console.log("End call sent to recipient ", { remoteUserSocketId, data });
       }
     });
   }

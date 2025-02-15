@@ -4,7 +4,15 @@ import * as webRtc from "./webrtc.js";
 
 let _socket;
 export function connect() {
-  _socket = io("http://localhost:3000");
+  const signalingServerUrl = import.meta.env.VITE_SIGNALING_SERVER_URL;
+  if (!signalingServerUrl) {
+    console.error(
+      "Signaling server url not found. Please set VITE_SIGNALING_SERVER_URL in .env file.",
+    );
+    return;
+  }
+  _socket = io(signalingServerUrl);
+
   _socket.on("connect", () => {
     console.log("Connected to signaling server");
   });

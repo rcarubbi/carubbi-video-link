@@ -1,7 +1,7 @@
 import "notyf/notyf.min.css";
 import Waves from "node-waves";
 import { Notyf } from "notyf";
-import * as Dropdown from "./components/Dropdown.js";
+import * as Dropdown from "./components/dropdown.js";
 import * as webRtc from "./webrtc.js";
 import * as fx from "./fx.js";
 
