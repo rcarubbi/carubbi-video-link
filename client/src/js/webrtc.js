@@ -9,6 +9,7 @@ let _peerConnection = null;
 let _localStream = null;
 let _remoteUserId = null;
 let _incomingOffer = null;
+let _pendingIceCandidates = [];
 
 const videoConstraints = {
   width: { ideal: 1920, max: 1920 },
@@ -23,28 +24,26 @@ const audioConstraints = {
 };
 
 const iceServers = [
-  {
-    urls: "stun:stun.relay.metered.ca:80",
-  },
+  { urls: "stun:stun.relay.metered.ca:80" },
   {
     urls: "turn:global.relay.metered.ca:80",
-    username: "8813cbb5cb49c9cb4b9bb8f9",
-    credential: "o21Qt9JBUu2r8KMP",
+    username: "805fa1a146c089442314c091",
+    credential: "PLS2t69GUqwmazj0",
   },
   {
     urls: "turn:global.relay.metered.ca:80?transport=tcp",
-    username: "8813cbb5cb49c9cb4b9bb8f9",
-    credential: "o21Qt9JBUu2r8KMP",
+    username: "805fa1a146c089442314c091",
+    credential: "PLS2t69GUqwmazj0",
   },
   {
     urls: "turn:global.relay.metered.ca:443",
-    username: "8813cbb5cb49c9cb4b9bb8f9",
-    credential: "o21Qt9JBUu2r8KMP",
+    username: "805fa1a146c089442314c091",
+    credential: "PLS2t69GUqwmazj0",
   },
   {
     urls: "turns:global.relay.metered.ca:443?transport=tcp",
-    username: "8813cbb5cb49c9cb4b9bb8f9",
-    credential: "o21Qt9JBUu2r8KMP",
+    username: "805fa1a146c089442314c091",
+    credential: "PLS2t69GUqwmazj0",
   },
 ];
 
@@ -53,25 +52,29 @@ export function init() {
   signalingClient.registerUser();
 
   requestMediaPermissions().then(async () => {
-     _videoDevices=  await listVideoDevices();
-      ui.populateVideoDevices(_videoDevices);
-      const defaultVideoDeviceId = _videoDevices[0].deviceId;
-      setVideoDevice(defaultVideoDeviceId);
-      ui.updateSelectedVideoDevice(defaultVideoDeviceId);
-    
-     _audioDevices = await listAudioDevices();
-      ui.populateAudioDevices(_audioDevices);
-      const defaultAudioDeviceId = _audioDevices[0].deviceId;
-      setAudioDevice(defaultAudioDeviceId);
-      ui.updateSelectedAudioDevice(defaultAudioDeviceId);
+    _videoDevices = await listVideoDevices();
+    ui.populateVideoDevices(_videoDevices);
+    const defaultVideoDeviceId = _videoDevices[0].deviceId;
+    setVideoDevice(defaultVideoDeviceId);
+    ui.updateSelectedVideoDevice(defaultVideoDeviceId);
+
+    _audioDevices = await listAudioDevices();
+    ui.populateAudioDevices(_audioDevices);
+    const defaultAudioDeviceId = _audioDevices[0].deviceId;
+    setAudioDevice(defaultAudioDeviceId);
+    ui.updateSelectedAudioDevice(defaultAudioDeviceId);
   });
 }
 
 async function requestMediaPermissions() {
   try {
-    await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: true,
+    });
+    stream.getTracks().forEach((track) => track.stop());
   } catch (err) {
-    console.error("Media access permission denied:", err);
+    ui.showError("Access to user media denied");
   }
 }
 
@@ -107,14 +110,15 @@ export function setAudioDevice(deviceId) {
   }
 }
 
-export async function startCall({ localUserId, remoteUserId }) {
-  _peerConnection = new RTCPeerConnection({ iceServers });
-  _remoteUserId = remoteUserId;
+async function createPeerConnection() {
+  _peerConnection = new RTCPeerConnection({
+    iceServers,
+  });
   _peerConnection.onicecandidate = (event) => {
     if (event.candidate) {
       signalingClient.sendIceCandidate({
         candidate: event.candidate,
-        _remoteUserId,
+        remoteUserId: _remoteUserId,
       });
     }
   };
@@ -123,16 +127,21 @@ export async function startCall({ localUserId, remoteUserId }) {
     ui.showRemoteVideoStream(event.streams[0]);
   };
 
+  _localStream.getTracks().forEach((track) => {
+    _peerConnection.addTrack(track, _localStream);
+  });
+}
+
+export async function startCall({ localUserId, remoteUserId }) {
+  _remoteUserId = remoteUserId;
+
   _localStream = await navigator.mediaDevices.getUserMedia({
     video: { deviceId: _videoDeviceId, ...videoConstraints },
     audio: { deviceId: _audioDeviceId, ...audioConstraints },
   });
-
-  _localStream.getTracks().forEach((track) => {
-    _peerConnection.addTrack(track, _localStream);
-  });
-
   ui.showLocalVideoStream(_localStream);
+
+  await createPeerConnection();
 
   const offer = await _peerConnection.createOffer();
   await _peerConnection.setLocalDescription(offer);
@@ -148,8 +157,6 @@ export function cancelCall() {
   _localStream.getTracks().forEach((track) => {
     track.stop();
   });
-
-  _localStream = null;
 
   ui.showLocalVideoStream(null);
 
@@ -189,29 +196,15 @@ export async function setIncomingOffer(offer, remoteUserId) {
 }
 
 export async function acceptCall() {
-  _peerConnection = new RTCPeerConnection({ iceServers });
-  _peerConnection.onicecandidate = (event) => {
-    if (event.candidate) {
-      signalingClient.sendIceCandidate({
-        candidate: event.candidate,
-        remoteUserId: _remoteUserId,
-      });
-    }
-  };
+  await createPeerConnection();
 
-  _peerConnection.ontrack = (event) => {
-    ui.showRemoteVideoStream(event.streams[0]);
-  };
-
-  _peerConnection.setRemoteDescription(_incomingOffer);
-
-  _localStream.getTracks().forEach((track) => {
-    _peerConnection.addTrack(track, _localStream);
-  });
+  await _peerConnection.setRemoteDescription(
+    new RTCSessionDescription(_incomingOffer),
+  );
+  await flushPendingIceCandidates();
 
   const answer = await _peerConnection.createAnswer();
-
-  _peerConnection.setLocalDescription(answer);
+  await _peerConnection.setLocalDescription(answer);
 
   signalingClient.sendAnswer({
     remoteUserId: _remoteUserId,
@@ -223,9 +216,18 @@ export async function acceptCall() {
   _incomingOffer = null;
 }
 
+async function flushPendingIceCandidates() {
+  for (const candidate of _pendingIceCandidates) {
+    await _peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+  }
+
+  _pendingIceCandidates = [];
+}
+
 export function rejectCall() {
   _incomingOffer = null;
   signalingClient.sendRejectCall({ remoteUserId: _remoteUserId });
+  _pendingIceCandidates = [];
   _remoteUserId = null;
 }
 
@@ -238,8 +240,6 @@ function stopLocalStream() {
   _localStream.getTracks().forEach((track) => {
     track.stop();
   });
-
-  _localStream = null;
 
   ui.showLocalVideoStream(null);
 
@@ -255,11 +255,16 @@ export function endLocalCall() {
 
 export async function setAnswer(answer) {
   const remoteDesc = new RTCSessionDescription(answer);
+  await flushPendingIceCandidates();
   await _peerConnection.setRemoteDescription(remoteDesc);
 }
 
-export function addIceCandidate(candidate) {
-  _peerConnection.addIceCandidate(candidate);
+export async function addIceCandidate(candidate) {
+  if (!_peerConnection || !_peerConnection.remoteDescription) {
+    _pendingIceCandidates.push(candidate);
+  } else {
+    await _peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+  }
 }
 
 export function cancelIncomingCall() {

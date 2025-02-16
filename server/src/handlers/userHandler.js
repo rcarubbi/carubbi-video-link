@@ -5,6 +5,5 @@ export function addHandler(socket, users) {
     const userId = uuidv4();
     users.set(userId, socket.id);
     socket.emit("user-registered", { userId });
-    console.log("User registered", { userId, socketId: socket.id });
   });
 }

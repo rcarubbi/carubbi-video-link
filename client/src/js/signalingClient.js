@@ -6,16 +6,12 @@ let _socket;
 export function connect() {
   const signalingServerUrl = import.meta.env.VITE_SIGNALING_SERVER_URL;
   if (!signalingServerUrl) {
-    console.error(
+    ui.showError(
       "Signaling server url not found. Please set VITE_SIGNALING_SERVER_URL in .env file.",
     );
     return;
   }
   _socket = io(signalingServerUrl, { secure: true });
-
-  _socket.on("connect", () => {
-    console.log("Connected to signaling server");
-  });
 
   addListeners();
 }
@@ -31,12 +27,11 @@ function addListeners() {
 }
 
 function handleUserRegistered({ userId }) {
-  console.log("User registered", userId);
   ui.updateUserId(userId);
 }
 
-function handleIceCandidate({ candidate, remoteUserId }) {
-  webRtc.addIceCandidate(candidate, remoteUserId);
+async function handleIceCandidate({ candidate }) {
+  await webRtc.addIceCandidate(candidate);
 }
 
 function handleOffer({ offer, from }) {

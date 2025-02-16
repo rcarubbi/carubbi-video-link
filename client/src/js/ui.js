@@ -266,3 +266,7 @@ export function hideOutgoingCallModal() {
   hide(outgoingCallModal);
   refreshControlsState(states.idle);
 }
+
+export function showError(message) {
+  notyf.error(message);
+}

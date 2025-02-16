@@ -11,8 +11,6 @@ const users = new Map();
 
 export default function (io) {
   io.on("connection", (socket) => {
-    console.log("User connected",  { socketId: socket.id });
-
     userHandler.addHandler(socket, users);
     offerHandler.addHandler(socket, users);
     answerHandler.addHandler(socket, users);
