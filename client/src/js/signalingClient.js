@@ -11,7 +11,7 @@ export function connect() {
     );
     return;
   }
-  _socket = io(signalingServerUrl);
+  _socket = io(signalingServerUrl, { secure: true });
 
   _socket.on("connect", () => {
     console.log("Connected to signaling server");

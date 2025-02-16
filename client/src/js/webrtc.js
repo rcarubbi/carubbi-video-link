@@ -11,9 +11,9 @@ let _remoteUserId = null;
 let _incomingOffer = null;
 
 const videoConstraints = {
-  // width: { ideal: 1920, max: 1920 },
-  // height: { ideal: 1080, max: 1080 },
-  // frameRate: { ideal: 30 },
+  width: { ideal: 1920, max: 1920 },
+  height: { ideal: 1080, max: 1080 },
+  frameRate: { ideal: 30 },
 };
 
 const audioConstraints = {
@@ -24,27 +24,55 @@ const audioConstraints = {
 
 const iceServers = [
   {
-    urls: "stun:stun.l.google.com:19302",
+    urls: "stun:stun.relay.metered.ca:80",
+  },
+  {
+    urls: "turn:global.relay.metered.ca:80",
+    username: "8813cbb5cb49c9cb4b9bb8f9",
+    credential: "o21Qt9JBUu2r8KMP",
+  },
+  {
+    urls: "turn:global.relay.metered.ca:80?transport=tcp",
+    username: "8813cbb5cb49c9cb4b9bb8f9",
+    credential: "o21Qt9JBUu2r8KMP",
+  },
+  {
+    urls: "turn:global.relay.metered.ca:443",
+    username: "8813cbb5cb49c9cb4b9bb8f9",
+    credential: "o21Qt9JBUu2r8KMP",
+  },
+  {
+    urls: "turns:global.relay.metered.ca:443?transport=tcp",
+    username: "8813cbb5cb49c9cb4b9bb8f9",
+    credential: "o21Qt9JBUu2r8KMP",
   },
 ];
 
 export function init() {
   signalingClient.connect();
   signalingClient.registerUser();
-  listVideoDevices().then((devices) => {
-    _videoDevices = devices;
-    ui.populateVideoDevices(devices);
-    const defaultVideoDeviceId = devices[0].deviceId;
-    setVideoDevice(defaultVideoDeviceId);
-    ui.updateSelectedVideoDevice(defaultVideoDeviceId);
+
+  requestMediaPermissions().then(async () => {
+     _videoDevices=  await listVideoDevices();
+      ui.populateVideoDevices(_videoDevices);
+      const defaultVideoDeviceId = _videoDevices[0].deviceId;
+      setVideoDevice(defaultVideoDeviceId);
+      ui.updateSelectedVideoDevice(defaultVideoDeviceId);
+    
+     _audioDevices = await listAudioDevices();
+      ui.populateAudioDevices(_audioDevices);
+      const defaultAudioDeviceId = _audioDevices[0].deviceId;
+      setAudioDevice(defaultAudioDeviceId);
+      ui.updateSelectedAudioDevice(defaultAudioDeviceId);
   });
-  listAudioDevices().then((devices) => {
-    _audioDevices = devices;
-    ui.populateAudioDevices(devices);
-    const defaultAudioDeviceId = devices[0].deviceId;
-    setAudioDevice(defaultAudioDeviceId);
-    ui.updateSelectedAudioDevice(defaultAudioDeviceId);
-  });
+}
+
+async function requestMediaPermissions() {
+  try {
+    await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+  } catch (err) {
+    console.error("Media access permission denied:", err);
+  }
 }
 
 async function listVideoDevices() {
